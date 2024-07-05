@@ -16,20 +16,29 @@ async def fry_eggs():  # 1
     await asyncio.sleep(3) # 2: pause, another tasks can be run
     print("eggs: ready")
 
+async def toast_bread():  # 1
+    print("bread: prepare ingridients")
+    sleep(1) # pause, for 1 sec
+    print("bread: toasting...")
+    await asyncio.sleep(3) # 2: pause, another tasks can be run
+    print("bread: ready")
+
 async def main():  # 1
     start = time()
     coffee_task = asyncio.create_task(make_coffee()) # schedule execution
     eggs_task = asyncio.create_task(fry_eggs()) # schedule execution
+    toast_task = asyncio.create_task(toast_bread()) # schedule execution
     # wait for completion, both tasks are schedule for execution already
     await coffee_task
     await eggs_task
+    await toast_task
 
     # # Run tasks concurrently
     # await asyncio.gather(
     #     make_coffee(),
     #     fry_eggs()
     # )
-    
+
     print(f"breakfast is ready in {time()-start} min")
 
 asyncio.run(main())  # run top-level function concurrently
