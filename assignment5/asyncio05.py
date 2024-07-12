@@ -3,21 +3,21 @@ import asyncio
 
 async def cook_fried_rice():
     cooking_time = 1 + random()
+    print(f">Fried rice cooked in {cooking_time}")
     await asyncio.sleep(cooking_time)
-    print(f">Fried rice cooked in {cooking_time} minutes")
-    return "Rice"
+    return "Fried rice", cooking_time
 
 async def cook_noodle():
     cooking_time = 1 + random()
+    print(f">Noodle cooked in {cooking_time}")
     await asyncio.sleep(cooking_time)
-    print(f">Noodle cooked in {cooking_time} minutes")
-    return "Noodle"
+    return "Noodle", cooking_time
 
 async def cook_curry():
     cooking_time = 1 + random()
+    print(f">Curry cooked in {cooking_time}")
     await asyncio.sleep(cooking_time)
-    print(f">Curry cooked in {cooking_time} minutes")
-    return "Curry"
+    return "Curry", cooking_time
 
 async def main():
     tasks = [
@@ -25,13 +25,18 @@ async def main():
         asyncio.create_task(cook_noodle()),
         asyncio.create_task(cook_curry())
     ]
-    
+   
     done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
     
-    first_dish = done.pop().result()
-    print(f"Student A can eat the {first_dish} first")
+    print(f"Completed tasks: {len(done)}")
+    print(f"Uncompleted tasks: {len(pending)}")
 
-    await asyncio.gather(*pending)
+    first_completed_task = done.pop()
+    first_dish, cooking_time = first_completed_task.result()
+    print(f"First dish to complete is {first_dish} and finished in {cooking_time}")
+    
+    # await asyncio.gather(*done)
+    # await asyncio.gather(*pending)
     print("All dishes are ready")
 
 asyncio.run(main())
