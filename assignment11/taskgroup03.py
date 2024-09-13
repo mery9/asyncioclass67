@@ -29,40 +29,53 @@ class Customer:
 # After finishing processing the data, 
 # we use queue.task_done() to tell the queue that the data has been successfully processed.
 async def checkout_customer(queue: Queue, cashier_number: int):
-    cashier_total_time = 0  # Initialize cashier's total time
+    cashier_total_times = []  # Initialize a list to store checkout times
     cashier_start_time = time.perf_counter()  # Start time for the cashier
     customer_count = 0  # Count how many customers this cashier checks out
 
     while not queue.empty():
         customer: Customer = await queue.get()
-        customer_start_time = time.perf_counter()
         print(f"The Cashier_{cashier_number} will checkout Customer_{customer.customer_id}")
+        customer_start_time = time.perf_counter()
+
+        # List to track each customer's product checkout times
+        customer_times = []
 
         for product in customer.products:
             # If cashier is cashier_2, use fixed checkout time 0.1 for all products
-            if cashier_number == 2:
+            if (cashier_number == 2):
                 adjusted_checkout_time = 0.1
             else:
                 # Adjust checkout time based on cashier number using formula 1 + (0.1 * cashier_number)
-                adjusted_checkout_time = product.checkout_time + (0.1 * cashier_number)
+                adjusted_checkout_time = round(product.checkout_time + (0.1 * cashier_number), ndigits=2)
             
             print(f"The Cashier_{cashier_number} "
                   f"will checkout Customer_{customer.customer_id}'s "
                   f"Product_{product.product_name} "
                   f"in {adjusted_checkout_time} secs")
+            
+            # Append the product's checkout time to the list
+            customer_times.append(adjusted_checkout_time)
+
             await asyncio.sleep(adjusted_checkout_time)
+
+        # Sum the checkout times for this customer and round the total
+        customer_checkout_time = round(sum(customer_times), ndigits=2)
+        cashier_total_times.append(customer_checkout_time)  # Add to the cashier's total times list
         
-        customer_checkout_time = time.perf_counter() - customer_start_time
-        cashier_total_time += customer_checkout_time  # Add to cashier's total time
         print(f"The Cashier_{cashier_number} finished checkout Customer_{customer.customer_id} "
-              f"in {round(customer_checkout_time, ndigits=2)} secs")
+              f"in {customer_checkout_time} secs")
 
         customer_count += 1  # Increment customer count
         queue.task_done()
 
-    # After all customers are processed, return the total time and customer count for the cashier
-    cashier_total_time = time.perf_counter() - cashier_start_time
-    return cashier_number, customer_count, round(cashier_total_time, ndigits=2)
+    # Calculate the total time spent by the cashier by summing all the customer checkout times
+    total_time_for_cashier = round(sum(cashier_total_times), ndigits=2)
+    
+    # After all customers are processed, return the cashier number, customer count, and total time
+    return cashier_number, customer_count, total_time_for_cashier
+
+
 
 
 # we implement the generate_customer method as a factory method for producing customers.
@@ -95,7 +108,7 @@ async def customer_generation(queue: Queue, customers: int):
 async def main():
     number_of_cashiers = 5
     
-    customer_queue = Queue(3)
+    customer_queue = Queue(5)
     customers_start_time = time.perf_counter()
 
     async with TaskGroup() as group:
